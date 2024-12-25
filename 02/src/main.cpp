@@ -4,17 +4,15 @@
 #include <string>
 #include <vector>
 
-int part1(std::string fileName){
+int part1(std::vector<std::string> inp){
    int count = 0;
    
    std::vector<std::vector<int>> reports;
 
-   std::ifstream file(fileName);
-   std::string temp;
-   while (std::getline(file, temp)){
+   for (std::string s : inp){
       std::string nS = "";
       std::vector<int> rp;
-      for (char ch : temp){
+      for (char ch : s){
          if (ch == ' '){
             rp.push_back(std::stoi(nS));
             nS = "";
@@ -26,7 +24,6 @@ int part1(std::string fileName){
       rp.push_back(std::stoi(nS));
       reports.push_back(rp);
    }
-   file.close();
    for (std::vector<int> repo : reports){
       // check if ascending or decending
       bool ascending = repo[0]-repo[1] < 0;
@@ -58,17 +55,15 @@ std::vector<std::vector<int>> removeOneLevel(std::vector<int> repo){
    return perms;
 }
 
-int part2(std::string fileName){
+int part2(std::vector<std::string> inp){
    int count = 0;
    
    std::vector<std::vector<int>> reports;
 
-   std::ifstream file(fileName);
-   std::string temp;
-   while (std::getline(file, temp)){
+   for (std::string s : inp){
       std::string nS = "";
       std::vector<int> rp;
-      for (char ch : temp){
+      for (char ch : s){
          if (ch == ' '){
             rp.push_back(std::stoi(nS));
             nS = "";
@@ -80,7 +75,6 @@ int part2(std::string fileName){
       rp.push_back(std::stoi(nS));
       reports.push_back(rp);
    }
-   file.close();
    for (std::vector<int> repo : reports){
       // check if ascending or decending
       bool ascending = repo[0]-repo[1] < 0;
@@ -118,10 +112,24 @@ int part2(std::string fileName){
 
 
 int main (int argc, char *argv[]) {
-   std::cout << "sample part 2:\n";
-   std::cout << part2(argv[1]) << std::endl;
-   std::cout << "input part 2:\n";
-   std::cout << part2(argv[2]) << std::endl;
-
+   if (argc < 2) {
+      std::cerr << "Error: No file path provided.\n";
+      std::cerr << "Usage: " << argv[0] << " <filename>\n";
+      return 1;
+   }
+   std::string filePath = argv[1];
+   if (filePath.empty()) {
+      std::cerr << "Error: File path is empty.\n";
+      return 1;
+   }
+   std::vector<std::string> input;
+   std::ifstream file(filePath);
+   std::string temp;
+   while (std::getline(file, temp)){
+      input.push_back(temp);
+   }
+   file.close();
+   std::cout << "Part 1: " << part1(input) << std::endl;
+   std::cout << "NOT CORRECT YET Part 2: " << part2(input) << std::endl;
    return 0;
 }
