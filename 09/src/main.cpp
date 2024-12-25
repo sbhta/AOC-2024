@@ -73,16 +73,24 @@ unsigned long long part2(std::string inp){
 }
 
 int main (int argc, char *argv[]) {
-   std::string sample;
-   std::string input;
-   std::ifstream fileSample(argv[1]);
-   std::ifstream fileInput(argv[2]);
-   std::getline(fileSample, sample);
-   std::getline(fileInput, input);
-   fileSample.close();
-   fileInput.close();
-
-   std::cout << part2(sample) << std::endl;
-   std::cout << part2(input) << std::endl;
+      if (argc < 2) {
+      std::cerr << "Error: No file path provided.\n";
+      std::cerr << "Usage: " << argv[0] << " <filename>\n";
+      return 1;
+   }
+   std::string filePath = argv[1];
+   if (filePath.empty()) {
+      std::cerr << "Error: File path is empty.\n";
+      return 1;
+   }
+   std::vector<std::string> input;
+   std::ifstream file(filePath);
+   std::string temp;
+   while (std::getline(file, temp)){
+      input.push_back(temp);
+   }
+   file.close();
+   std::cout << "Part 1: " << part1(input[0]) << std::endl;
+   std::cout << "Part 2: " << part2(input[0]) << std::endl;
    return 0;
 }
