@@ -4,6 +4,9 @@
 # Ignore template directory 00/
 /00/
 
+# Ignore inputs from site
+*/input.txt
+
 # Ignore compiled files
 *.o
 *.exe
