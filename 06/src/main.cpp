@@ -6,12 +6,9 @@
 #include <utility>
 #include <vector>
 
-int part1(std::string fileName){
+int part1(std::vector<std::string> inp){
    std::vector<std::string> board;
-   std::ifstream file(fileName);
-   std::string temp;
-   while (std::getline(file, temp)) {board.push_back(temp);}
-   file.close();
+   for (std::string s : inp){board.push_back(s);}
 
    int xG, yG;
    char currentDir = 'u';
@@ -109,14 +106,11 @@ bool simulate_with_obstruction(std::vector<std::string> board, int obsX, int obs
     }
 }
 
-int part2(std::string fileName) {
+int part2(std::vector<std::string> inp) {
     std::vector<std::string> board;
-    std::ifstream file(fileName);
-    std::string temp;
-    while (std::getline(file, temp)) {
-        board.push_back(temp);
+   for (std::string s : inp){
+        board.push_back(s);
     }
-    file.close();
 
     int loopCount = 0;
 
@@ -134,6 +128,24 @@ int part2(std::string fileName) {
     return loopCount;
 }
 int main (int argc, char *argv[]) {
-   std::cout << part2(argv[1]) << std::endl;
+      if (argc < 2) {
+      std::cerr << "Error: No file path provided.\n";
+      std::cerr << "Usage: " << argv[0] << " <filename>\n";
+      return 1;
+   }
+   std::string filePath = argv[1];
+   if (filePath.empty()) {
+      std::cerr << "Error: File path is empty.\n";
+      return 1;
+   }
+   std::vector<std::string> input;
+   std::ifstream file(filePath);
+   std::string temp;
+   while (std::getline(file, temp)){
+      input.push_back(temp);
+   }
+   file.close();
+   std::cout << "Part 1: " << part1(input) << std::endl;
+   std::cout << "Part 2: " << part2(input) << std::endl;
    return 0;
 }
