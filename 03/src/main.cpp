@@ -4,17 +4,14 @@
 #include <string>
 #include <vector>
 
-int part1(std::string fileName){
-   std::ifstream file(fileName);
-   std::string temp = "";
+int part1(std::vector<std::string> inp){
    std::regex pattern(R"(mul\(\d+,\d+\))");
    std::vector<std::string> mults;
-   while (std::getline(file, temp)){
-      for (std::sregex_iterator it(temp.begin(), temp.end(), pattern), end_it; it != end_it; ++it) {
+   for (std::string s : inp){
+      for (std::sregex_iterator it(s.begin(), s.end(), pattern), end_it; it != end_it; ++it) {
          mults.push_back(it->str()); 
       }
    }
-   file.close();
    int result = 0;
    for (std::string s : mults){
       std::string a;
@@ -29,17 +26,14 @@ int part1(std::string fileName){
 
    return result;
 }
-int part2(std::string fileName){
-   std::ifstream file(fileName);
-   std::string temp = "";
+int part2(std::vector<std::string> inp){
    std::regex pattern(R"(mul\(\d+,\d+\)|do\(\)|don't\(\))");
    std::vector<std::string> cmds;
-   while (std::getline(file, temp)){
-      for (std::sregex_iterator it(temp.begin(), temp.end(), pattern), end_it; it != end_it; ++it) {
+   for (std::string s : inp){
+      for (std::sregex_iterator it(s.begin(), s.end(), pattern), end_it; it != end_it; ++it) {
          cmds.push_back(it->str()); 
       }
    }
-   file.close();
    int result = 0;
    bool Do = true;
    for (std::string s : cmds){
@@ -59,13 +53,24 @@ int part2(std::string fileName){
    return result;
 }
 int main (int argc, char *argv[]) {
-   std::cout << "sample part 1:";
-   std::cout << part1(argv[1]) << std::endl;
-   std::cout << "sample part 2:";
-   std::cout << part2(argv[1]) << std::endl;
-   std::cout << "input part 1:";
-   std::cout << part1(argv[2]) << std::endl;
-   std::cout << "input part 2:";
-   std::cout << part2(argv[2]) << std::endl;
+   if (argc < 2) {
+      std::cerr << "Error: No file path provided.\n";
+      std::cerr << "Usage: " << argv[0] << " <filename>\n";
+      return 1;
+   }
+   std::string filePath = argv[1];
+   if (filePath.empty()) {
+      std::cerr << "Error: File path is empty.\n";
+      return 1;
+   }
+   std::vector<std::string> input;
+   std::ifstream file(filePath);
+   std::string temp;
+   while (std::getline(file, temp)){
+      input.push_back(temp);
+   }
+   file.close();
+   std::cout << "Part 1: " << part1(input) << std::endl;
+   std::cout << "Part 2: " << part2(input) << std::endl;
    return 0;
 }
