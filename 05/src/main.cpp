@@ -62,18 +62,16 @@ std::vector<int> correctUpdate(std::map<int, std::vector<int>> rules, std::vecto
    return sortedUpdate;
 }
 
-int part1(std::string fileName){
+int part1(std::vector<std::string> inp){
    std::map<int, std::vector<int>> rules;
    std::vector<std::vector<int>> updatesVector;
-   std::ifstream file(fileName);
-   std::string temp;
    bool gettingRules = true;
-   while (std::getline(file, temp)){
-      if (temp == "") {gettingRules = false; continue;}
+   for (std::string s : inp){
+      if (s == "") {gettingRules = false; continue;}
       else {
          if (gettingRules){
-            int x = std::stoi(temp.substr(0,2));
-            int y = std::stoi(temp.substr(3,2));
+            int x = std::stoi(s.substr(0,2));
+            int y = std::stoi(s.substr(3,2));
             if (rules.count(x) > 0) {
                rules[x].push_back(y);
             }
@@ -83,12 +81,11 @@ int part1(std::string fileName){
          }
          else {
             std::vector<int> up;
-            for (int i = 0; i < temp.length(); i+=3){ up.push_back(std::stoi(temp.substr(i, 2))); }
+            for (int i = 0; i < s.length(); i+=3){ up.push_back(std::stoi(s.substr(i, 2))); }
             updatesVector.push_back(up);
          }
       }
    }
-   file.close();
 
    std::vector<std::vector<int>> correctUpdates;
    for (int i = 0; i < updatesVector.size(); ++i){
@@ -102,18 +99,16 @@ int part1(std::string fileName){
 
    return result;
 }
-int part2(std::string fileName){
+int part2(std::vector<std::string> inp){
    std::map<int, std::vector<int>> rules;
    std::vector<std::vector<int>> updatesVector;
-   std::ifstream file(fileName);
-   std::string temp;
    bool gettingRules = true;
-   while (std::getline(file, temp)){
-      if (temp == "") {gettingRules = false; continue;}
+   for (std::string s : inp){
+      if (s == "") {gettingRules = false; continue;}
       else {
          if (gettingRules){
-            int x = std::stoi(temp.substr(0,2));
-            int y = std::stoi(temp.substr(3,2));
+            int x = std::stoi(s.substr(0,2));
+            int y = std::stoi(s.substr(3,2));
             if (rules.count(x) > 0) {
                rules[x].push_back(y);
             }
@@ -123,12 +118,11 @@ int part2(std::string fileName){
          }
          else {
             std::vector<int> up;
-            for (int i = 0; i < temp.length(); i+=3){ up.push_back(std::stoi(temp.substr(i, 2))); }
+            for (int i = 0; i < s.length(); i+=3){ up.push_back(std::stoi(s.substr(i, 2))); }
             updatesVector.push_back(up);
          }
       }
    }
-   file.close();
 
    std::vector<std::vector<int>> incorrectUpdates;
    std::vector<std::vector<int>> correctUpdates;
@@ -147,13 +141,24 @@ int part2(std::string fileName){
    return result;
 }
 int main (int argc, char *argv[]) {
-   std::cout << "sample part 1: ";
-   std::cout << part1(argv[1]) << std::endl;
-   std::cout << "input part 1: ";
-   std::cout << part1(argv[2]) << std::endl;
-   std::cout << "sample part 2: ";
-   std::cout << part2(argv[1]) << std::endl;
-   std::cout << "input part 2: ";
-   std::cout << part2(argv[2]) << std::endl;
+      if (argc < 2) {
+      std::cerr << "Error: No file path provided.\n";
+      std::cerr << "Usage: " << argv[0] << " <filename>\n";
+      return 1;
+   }
+   std::string filePath = argv[1];
+   if (filePath.empty()) {
+      std::cerr << "Error: File path is empty.\n";
+      return 1;
+   }
+   std::vector<std::string> input;
+   std::ifstream file(filePath);
+   std::string temp;
+   while (std::getline(file, temp)){
+      input.push_back(temp);
+   }
+   file.close();
+   std::cout << "Part 1: " << part1(input) << std::endl;
+   std::cout << "Part 2: " << part2(input) << std::endl;
    return 0;
 }
