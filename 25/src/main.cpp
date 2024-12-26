@@ -42,16 +42,23 @@ int part1(std::vector<std::string> inp){
 }
 
 int main (int argc, char *argv[]) {
-   std::vector<std::string> sample;
+      if (argc < 2) {
+      std::cerr << "Error: No file path provided.\n";
+      std::cerr << "Usage: " << argv[0] << " <filename>\n";
+      return 1;
+   }
+   std::string filePath = argv[1];
+   if (filePath.empty()) {
+      std::cerr << "Error: File path is empty.\n";
+      return 1;
+   }
    std::vector<std::string> input;
+   std::ifstream file(filePath);
    std::string temp;
-   std::ifstream fileSample(argv[1]);
-   std::ifstream fileInput(argv[2]);
-   while (std::getline(fileSample, temp)){sample.push_back(temp);}
-   while (std::getline(fileInput, temp)){input.push_back(temp);}
-   fileSample.close();
-   fileInput.close();
-
-   std::cout << part1(input) << std::endl;
+   while (std::getline(file, temp)){
+      input.push_back(temp);
+   }
+   file.close();
+   std::cout << "Part 1: " << part1(input) << std::endl;
    return 0;
 }
