@@ -80,9 +80,7 @@ int part1(std::vector<std::string> inp, int mapS, int bytesA){
    // print the map
    for (int i = 0; i < mapSize; ++i){
       for (int j = 0; j < mapSize; ++j){
-         std::cout << map[i][j];
       }
-      std::cout << std::endl;
    }
 
    return shortestPath(map);
@@ -127,7 +125,7 @@ int part2(std::vector<std::string> inp, int mapS) {
       // Check if the exit is still reachable
       int pathLength = shortestPath(map);
       if (pathLength == -1) {
-         std::cout << "Exit became unreachable after byte " << bytes[i].first <<','<<bytes[i].second << " fell." << std::endl;
+         std::cout  << bytes[i].first <<','<<bytes[i].second << std::endl;
          return -1;
       }
    }
@@ -143,20 +141,24 @@ int part2(std::vector<std::string> inp, int mapS) {
    return shortestPath(map);
 }
 int main (int argc, char *argv[]) {
-   std::vector<std::string> sample;
+    if (argc < 2) {
+      std::cerr << "Error: No file path provided.\n";
+      std::cerr << "Usage: " << argv[0] << " <filename>\n";
+      return 1;
+   }
+   std::string filePath = argv[1];
+   if (filePath.empty()) {
+      std::cerr << "Error: File path is empty.\n";
+      return 1;
+   }
    std::vector<std::string> input;
+   std::ifstream file(filePath);
    std::string temp;
-   std::ifstream fileSample(argv[1]);
-   std::ifstream fileInput(argv[2]);
-   while (std::getline(fileSample, temp)){sample.push_back(temp);}
-   while (std::getline(fileInput, temp)){input.push_back(temp);}
-   fileSample.close();
-   fileInput.close();
-
-   //std::cout << part1(sample, 6, 12) << std::endl;
-   //std::cout << part1(input, 70, 1024) << std::endl;
-   std::cout << part2(sample, 6) << std::endl;
-   std::cout << part2(input, 70) << std::endl;
-   
+   while (std::getline(file, temp)){
+      input.push_back(temp);
+   }
+   file.close();
+   std::cout << "Part 1: " << part1(input, 70, 1024) << std::endl;
+   std::cout << "Part 2: ";   part2(input, 70);  
    return 0;
 }
