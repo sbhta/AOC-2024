@@ -31,72 +31,68 @@ bool hasSolution(std::pair<long long, std::vector<int>> eq){
 
    return false;
 }
-
 // Helper function to generate all permutations with replacements
 void generatePermutationsWithReplacements(std::vector<char>& input, std::vector<std::vector<char>>& results) {
-    // Sort the input to start with the lexicographically smallest arrangement
-    std::sort(input.begin(), input.end());
-    
-    do {
-        // Generate all replacements for the current arrangement
-        size_t size = input.size();
-        size_t combinations = std::pow(3, size); // 3 choices for each character ('+', '*', '|')
-        std::vector<char> current = input;
+    int length = input.size();
+    int combinations = std::pow(3, length); // 3 choices for each operator: '+', '*', '|'
 
-        for (size_t i = 0; i < combinations; ++i) {
-            size_t temp = i;
-            for (size_t j = 0; j < size; ++j) {
-                // Map temp value to '+', '*', or '|'
-                switch (temp % 3) {
-                    case 0: current[j] = '+'; break;
-                    case 1: current[j] = '*'; break;
-                    case 2: current[j] = '|'; break;
-                }
-                temp /= 3;
+    for (int i = 0; i < combinations; ++i) {
+        std::vector<char> current(length);
+        int temp = i;
+        for (int j = 0; j < length; ++j) {
+            switch (temp % 3) {
+                case 0: current[j] = '+'; break;
+                case 1: current[j] = '*'; break;
+                case 2: current[j] = '|'; break;
             }
-            results.push_back(current);
+            temp /= 3;
         }
-    } while (std::next_permutation(input.begin(), input.end())); // Generate the next permutation
+        results.push_back(current);
+    }
 }
-bool hasSolution2(std::pair<long long, std::vector<int>> eq){
-   long long value = eq.first;
-   std::vector<int> nums = eq.second;
-   long long sum = 0;
-   for (int i = 0; i < nums.size(); ++i) {sum += nums[i];}
-   if (sum == value) return true;
+bool hasSolution2(std::pair<long long, std::vector<int>> eq) {
+    long long value = eq.first;
+    std::vector<int> nums = eq.second;
 
-   std::vector<char> ops;
-   for (int i = 0; i < nums.size()-1; ++i){ ops.push_back('+'); }
+    // Quick check using the sum of all numbers
+    long long sum = 0;
+    for (int num : nums) {
+        sum += num;
+    }
+    if (sum == value) {
+        return true;
+    }
 
-   std::vector<std::vector<char>> opsPerms;
-   generatePermutationsWithReplacements(ops, opsPerms);
-   std::set<std::vector<char>> SetopsPerms(opsPerms.begin(), opsPerms.end());
-   for (auto x : SetopsPerms){
-      for (auto y : x){
-         std::cout << y << ' ';
-      }
-      std::cout << std::endl;
-   }
-   for (auto operators : SetopsPerms){
-      long long r = nums[0];
-      for (int j = 0; j < operators.size(); ++j){
-         if (operators[j] == '+') r += nums[j+1];
-         else if (operators[j] == '*') r *= nums[j+1];
-         else if (operators[j] == '|') {
-            std::string rS = std::to_string(r);
-            std::string nS = std::to_string(nums[j+1]);
-            std::string res = rS + nS;
-            r = std::stoll(res);
-         }
-      }
-      if (r == value) return true;
-   }
+    // Generate all operator combinations
+    std::vector<char> ops(nums.size() - 1, '+');
+    std::vector<std::vector<char>> opsPerms;
+    generatePermutationsWithReplacements(ops, opsPerms);
 
-   return false;
+    // Evaluate each operator combination
+    for (const auto& operators : opsPerms) {
+        long long r = nums[0];
+        for (size_t j = 0; j < operators.size(); ++j) {
+            if (operators[j] == '+') {
+                r += nums[j + 1];
+            } else if (operators[j] == '*') {
+                r *= nums[j + 1];
+            } else if (operators[j] == '|') {
+                std::string rS = std::to_string(r);
+                std::string nS = std::to_string(nums[j + 1]);
+                r = std::stoll(rS + nS);
+            }
+        }
+        if (r == value) {
+            return true;
+        }
+    }
+
+    return false;
 }
 long long part1(std::vector<std::string> inp){
    std::vector<std::pair<long long, std::vector<int>>> equations;
    for (std::string s : inp){
+      s.erase(s.find(' '), 1);
       std::string temp = "";
       std::pair<long long, std::vector<int>> eq;
       for (char c : s) {
@@ -115,27 +111,39 @@ long long part1(std::vector<std::string> inp){
    return sum;
 }
 long long part2(std::vector<std::string> inp){
-   std::vector<std::pair<long long, std::vector<int>>> equations;
-   for (std::string s : inp){
-      std::string temp = "";
-      std::pair<long long, std::vector<int>> eq;
-      for (char c : s) {
-         if (c == ':') {eq.first = std::stoll(temp); temp = "";}
-         else if (c == ' ') {eq.second.push_back(std::stoi(temp)); temp = "";}
-         else temp += c;
-      }
-      eq.second.push_back(std::stoi(temp));
-      equations.push_back(eq);
-   }
-   long long sum = 0;
-   for (auto eq : equations){
-      if (hasSolution2(eq)) {std::cout << '-' << eq.first << std::endl; sum += eq.first;}
-      std::cout << std::endl;
-   }
-   //int a = 4;
-   //if (hasSolution2(equations[a])) {std::cout << '-' << equations[a].first << std::endl;}
+       std::vector<std::pair<long long, std::vector<int>>> equations;
 
-   return sum;
+    // Parse input into equations
+    for (std::string s : inp) {
+        s.erase(s.find(' '), 1);
+        std::string temp = "";
+        std::pair<long long, std::vector<int>> eq;
+
+        for (char c : s) {
+            if (c == ':') {
+                eq.first = std::stoll(temp);
+                temp = "";
+            } else if (c == ' ') {
+                eq.second.push_back(std::stoi(temp));
+                temp = "";
+            } else {
+                temp += c;
+            }
+        }
+        eq.second.push_back(std::stoi(temp));
+        equations.push_back(eq);
+    }
+
+    long long sum = 0;
+
+    // Evaluate each equation
+    for (const auto& eq : equations) {
+        if (hasSolution2(eq)) {
+            sum += eq.first;
+        }
+    }
+
+    return sum;
 }
 
 int main (int argc, char *argv[]) {
@@ -157,7 +165,6 @@ int main (int argc, char *argv[]) {
    }
    file.close();
    std::cout << "Part 1: " << part1(input) << std::endl;
-   std::cout << "aaa" << std::endl;
    std::cout << "Part 2: " << part2(input) << std::endl;
    return 0;
 }
