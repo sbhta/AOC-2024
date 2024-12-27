@@ -6,10 +6,9 @@
 #include <utility>
 #include <vector>
 
-int part1(std::vector<std::string> inp){
-   std::vector<std::string> board;
-   for (std::string s : inp){board.push_back(s);}
 
+int part1(std::vector<std::string> inp){
+   std::vector<std::string> board = inp;
    int xG, yG;
    char currentDir = 'u';
    std::map<char, std::pair<int, int>> dir = {
@@ -20,10 +19,10 @@ int part1(std::vector<std::string> inp){
    }; 
    int dxG = dir[currentDir].first, dyG = dir[currentDir].second;
    for (int i = 0; i < board.size(); ++i){ for (int j = 0; j < board[0].length(); ++j){ if (board[i][j] == '^') {xG = j; yG = i;break;} } }
-   
+
    int visited = 1;
    while (xG+dxG < board[0].length() && xG+dxG > -1 &&
-          yG+dyG < board.size() && yG+dyG > -1){
+      yG+dyG < board.size() && yG+dyG > -1){
       int fyG = yG+dyG, fxG = xG+dxG;
       if (board[fyG][fxG] == '#'){
          if (currentDir == 'u') currentDir = 'r';
@@ -43,92 +42,86 @@ int part1(std::vector<std::string> inp){
          }
       }
    }
-
-   for (int i = 0; i < board.size(); ++i){
-      std::cout << board[i] << std::endl;
-   }
-
    return visited;
 }
-bool simulate_with_obstruction(std::vector<std::string> board, int obsX, int obsY) {
-    int xG, yG;
-    char currentDir = 'u';
-    std::map<char, std::pair<int, int>> dir = {
-        {'r', {1, 0}},
-        {'l', {-1, 0}},
-        {'u', {0, -1}},
-        {'d', {0, 1}},
-    };
-
-    // Find starting position
-    for (int i = 0; i < board.size(); ++i) {
-        for (int j = 0; j < board[0].length(); ++j) {
-            if (board[i][j] == '^') {
-                xG = j;
-                yG = i;
-                break;
-            }
-        }
-    }
-
-    // Place the obstruction
-    board[obsY][obsX] = '#';
-
-    std::set<std::tuple<int, int, char>> seenStates;
-    seenStates.insert({xG, yG, currentDir});
-
-    while (true) {
-        int dxG = dir[currentDir].first;
-        int dyG = dir[currentDir].second;
-        int nextX = xG + dxG;
-        int nextY = yG + dyG;
-
-        if (nextX < 0 || nextX >= board[0].length() || nextY < 0 || nextY >= board.size()) {
-            return false; // Guard exits the board
-        }
-
-        if (board[nextY][nextX] == '#') {
-            // Turn right
+int part2(std::vector<std::string> inp) {
+   std::vector<std::string> board = inp;
+   int x, y;
+   for (int i = 0; i < inp.size(); ++i){ for (int j = 0; j < inp.size(); ++j){ if (inp[i][j] == '^') {y = i; x = j; break;} } }
+   char currentDir = 'u';
+   std::map<char, std::pair<int, int>> dir = {
+      {'r', {1, 0}},
+      {'l', {-1, 0}},
+      {'u', {0, -1}},
+      {'d', {0, 1}},
+   }; 
+   int dx = dir[currentDir].first, dy = dir[currentDir].second;
+   for (int i = 0; i < board.size(); ++i){ for (int j = 0; j < board[0].length(); ++j){ if (board[i][j] == '^') {x = j; y = i;break;} } }
+   while (x+dx < board[0].length() && x+dx > -1 &&
+      y+dy < board.size() && y+dy > -1){
+      int fy = y+dy, fx = x+dx;
+      if (board[fy][fx] == '#'){
+         if (currentDir == 'u') currentDir = 'r';
+         else if (currentDir == 'r') currentDir = 'd';
+         else if (currentDir == 'd') currentDir = 'l';
+         else if (currentDir == 'l') currentDir = 'u';
+         dx = dir[currentDir].first;
+         dy = dir[currentDir].second;
+         continue;
+      }
+      else {
+         x = fx;
+         y = fy;
+         if (board[y][x] != 'X'){
+            board[y][x] = 'X';
+         }
+      }
+   }
+   std::vector<std::pair<int, int>> visited;
+   for (int i = 0; i < board.size(); ++i){ for (int j = 0; j < board[0].length(); ++j){ 
+      if (board[i][j] == 'X') {
+         visited.push_back({i, j});
+      } 
+   } }
+   int count = 0;
+   int index = 0;
+   for (auto v : visited){
+      index++;
+      std::vector<std::string> b2 = inp; b2[v.first][v.second] = '#';
+      for (int i = 0; i < inp.size(); ++i){ for (int j = 0; j < inp.size(); ++j){ if (inp[i][j] == '^') {y = i; x = j; break;} } }
+      char currentDir = 'u';
+      int dx = dir[currentDir].first, dy = dir[currentDir].second;
+      while (x+dx < b2[0].length() && x+dx > -1 &&
+         y+dy < b2.size() && y+dy > -1){
+         int fy = y+dy, fx = x+dx;
+         if (b2[fy][fx] == '#'){
             if (currentDir == 'u') currentDir = 'r';
             else if (currentDir == 'r') currentDir = 'd';
             else if (currentDir == 'd') currentDir = 'l';
             else if (currentDir == 'l') currentDir = 'u';
-        } else {
-            // Move forward
-            xG = nextX;
-            yG = nextY;
-        }
-
-        if (seenStates.count({xG, yG, currentDir})) {
-            return true; // Loop detected
-        }
-        seenStates.insert({xG, yG, currentDir});
-    }
-}
-
-int part2(std::vector<std::string> inp) {
-    std::vector<std::string> board;
-   for (std::string s : inp){
-        board.push_back(s);
-    }
-
-    int loopCount = 0;
-
-    // Test each position
-    for (int y = 0; y < board.size(); ++y) {
-        for (int x = 0; x < board[0].length(); ++x) {
-            if (board[y][x] == '.' && !(y == 6 && x == 2)) { // Avoid guard's starting position
-                if (simulate_with_obstruction(board, x, y)) {
-                    ++loopCount;
-                }
+            dx = dir[currentDir].first;
+            dy = dir[currentDir].second;
+            continue;
+         }
+         else {
+            x = fx;
+            y = fy;
+            if (b2[y][x] == '.'){
+               b2[y][x] = currentDir;
             }
-        }
-    }
-
-    return loopCount;
+            else {
+               if (b2[y][x] == currentDir){
+                  count++;
+                  break;
+               }
+            }
+         }
+      }
+   }
+   return count;
 }
 int main (int argc, char *argv[]) {
-      if (argc < 2) {
+   if (argc < 2) {
       std::cerr << "Error: No file path provided.\n";
       std::cerr << "Usage: " << argv[0] << " <filename>\n";
       return 1;
