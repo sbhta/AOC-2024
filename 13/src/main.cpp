@@ -1,98 +1,71 @@
+#include <cmath>
 #include <fstream>
 #include <iostream>
+#include <regex>
 #include <string>
-#include <tuple>
 #include <vector>
-
-std::pair<long long, long long> parseCoordinates(const std::string& input) {
-    // Find the position of "X" and determine the separator ('+' or '=')
-    std::size_t xPos = input.find("X");
-    std::size_t yPos = input.find("Y");
-
-    if (xPos == std::string::npos || yPos == std::string::npos) {
-        throw std::invalid_argument("Invalid format: Coordinates not found");
-    }
-
-    // Determine the separator for X and Y
-    char xSeparator = input[xPos + 1];
-    char ySeparator = input[yPos + 1];
-
-    if ((xSeparator != '+' && xSeparator != '=') || (ySeparator != '+' && ySeparator != '=')) {
-        throw std::invalid_argument("Invalid format: Separators not found");
-    }
-
-    // Extract the long longegers using substr and stoi
-    long long x = std::stoll(input.substr(xPos + 2, yPos - (xPos + 2)));
-    long long y = std::stoll(input.substr(yPos + 2));
-
-    return {x, y};
-}
-bool overShot(std::pair<long long, long long> prize, long long x, long long y){
-   if (x > prize.first || y > prize.second) return true;
-   return false;
-}
-long long costOfMachine(std::tuple<std::pair<long long, long long>, std::pair<long long, long long>, std::pair<long long, long long>> machine){
-   std::pair<long long, long long> A = std::get<0>(machine);
-   std::pair<long long, long long> B = std::get<1>(machine);
-   std::pair<long long, long long> P = std::get<2>(machine);
-   for (long long i = 100; i >= 0; --i){
-      if (overShot(P, B.first*i, B.second*2)){continue;}
-      long long sum = i*1;
-      for (long long j = 0;j <= 100; ++j){
-         if (B.first*i + A.first*j == P.first && B.second*i + A.second*j == P.second){
-            return sum+(j*3);
-         }
-         if (overShot(P, B.first*i+A.first*j, B.second*i+A.second*j)) {break;}
-      }
+struct ClawMachine {
+   std::pair<long long, long long> A;
+   std::pair<long long, long long> B;
+   std::pair<long long, long long> prize;
+};
+std::regex number_regex(R"(\d+)");
+ClawMachine getMachine(std::string block){
+   std::vector<long long> numbers;
+   for (std::sregex_iterator it(block.begin(), block.end(), number_regex), end; it != end; ++it) {
+      numbers.push_back(std::stoll(it->str()));
    }
-   return 0;
-}
-long long costOfMachine2(std::tuple<std::pair<long long, long long>, std::pair<long long, long long>, std::pair<long long, long long>> machine){
-   std::pair<long long, long long> A = std::get<0>(machine);
-   std::pair<long long, long long> B = std::get<1>(machine);
-   std::pair<long long, long long> P = std::get<2>(machine);
-   for (long long i = 100000; i >= 0; --i){
-      std::cout << i << std::endl;
-      if (overShot(P, B.first*i, B.second*2)){continue;}
-      long long sum = i*1;
-      for (long long j = 0;j <= 100; ++j){
-         if (B.first*i + A.first*j == P.first && B.second*i + A.second*j == P.second){
-            return sum+(j*3);
-         }
-         if (overShot(P, B.first*i+A.first*j, B.second*i+A.second*j)) {break;}
-      }
-   }
-   return 0;
+   return {{numbers[0], numbers[1]},{numbers[2], numbers[3]},{numbers[4], numbers[5]}};
 }
 long long part1(std::vector<std::string> inp){
-   std::vector<std::tuple<std::pair<long long, long long>, std::pair<long long, long long>, std::pair<long long, long long>>> machines;
-   for (long long i = 0; i < inp.size(); i+=3){
-      std::pair<long long, long long> A = parseCoordinates(inp[i]);
-      std::pair<long long, long long> B = parseCoordinates(inp[i+1]);
-      std::pair<long long, long long> P = parseCoordinates(inp[i+2]);
-      machines.push_back(std::make_tuple(A, B, P));
+   std::string temp = "";
+   std::vector<ClawMachine> machines;
+   for (std::string s : inp){
+      if (s == "") {
+         machines.push_back(getMachine(temp));
+         temp = "";
+      }
+      else temp += s;
    }
-   long long finalSum = 0;
-   for (long long i = 0; i < machines.size(); ++i){
-      finalSum += costOfMachine(machines[i]);
+   machines.push_back(getMachine(temp));
+   long long sum = 0;
+   for (ClawMachine m : machines){
+      bool running = true;
+      for (long long aT = 0; aT <= 100 && running; ++aT){
+         for (long long bT = 0; bT <= 100; ++bT){
+            if (m.prize.first == m.A.first*aT+m.B.first*bT &&
+                m.prize.second == m.A.second*aT+m.B.second*bT){
+               running = false;
+               sum += (aT*3)+(bT);
+            }
+         }
+      }
    }
-   return finalSum;
+
+   return sum;
 }
 long long part2(std::vector<std::string> inp){
-   std::vector<std::tuple<std::pair<long long, long long>, std::pair<long long, long long>, std::pair<long long, long long>>> machines;
-   for (long long i = 0; i < inp.size(); i+=3){
-      std::pair<long long, long long> A = parseCoordinates(inp[i]);
-      std::pair<long long, long long> B = parseCoordinates(inp[i+1]);
-      std::pair<long long, long long> P = parseCoordinates(inp[i+2]);
-      P.first += 10000000000000;
-      P.second += 10000000000000;
-      machines.push_back(std::make_tuple(A, B, P));
+   std::string temp = "";
+   std::vector<ClawMachine> machines;
+   for (std::string s : inp){
+      if (s == "") {
+         machines.push_back(getMachine(temp));
+         temp = "";
+      }
+      else temp += s;
    }
-   long long finalSum = 0;
-   for (long long i = 0; i < machines.size(); ++i){
-      finalSum += costOfMachine2(machines[i]);
+   machines.push_back(getMachine(temp));
+   long long sum = 0;
+   for (ClawMachine m : machines){
+      long long ax=m.A.first, ay=m.A.second, bx=m.B.first, by=m.B.second, px=m.prize.first+10000000000000, py=m.prize.second+10000000000000;
+      double ca = (px*by - py*bx) / (double)(ax*by - ay*bx);
+      double cb = (px - ax*ca) / bx;
+      if (std::trunc(ca) == ca && std::trunc(cb) == cb){
+         sum += (ca*3)+cb;
+      }
    }
-   return finalSum;
+
+   return sum;
 }
 int main (int argc, char *argv[]) {
       if (argc < 2) {
