@@ -1,104 +1,108 @@
+#include <algorithm>
+#include <cmath>
+#include <deque>
 #include <fstream>
 #include <iostream>
+#include <map>
 #include <string>
-#include <unordered_map>
 #include <vector>
-struct Position {
-    int row, col;
+
+std::vector<std::vector<char>> numKeypad = {
+   {'7', '8', '9'},
+   {'4', '5', '6'},
+   {'1', '2', '3'},
+   {' ', '0', 'A'},
 };
-std::unordered_map<char, Position> numPad = {
-        {'7', {0, 0}}, {'8', {0, 1}}, {'9', {0, 2}},
-        {'4', {1, 0}}, {'5', {1, 1}}, {'6', {1, 2}},
-        {'1', {2, 0}}, {'2', {2, 1}}, {'3', {2, 2}},
-                       {'0', {3, 1}}, {'A', {3, 2}} // 'A' is at the bottom-right
-    };
-std::unordered_map<char, Position> dirPad= {
-                 {'^', {0, 1}},{'A', {0, 2}},
-   {'<', {1, 0}},{'v', {1, 1}},{'>', {1, 2}},
-    };
-std::string getNumericActions(std::string code){
-   Position current = numPad['A'];
-   int totalSteps = 0;
-   std::vector<char> path; // To store the movement directions
-
-   for (char digit : code) {
-      Position target = numPad[digit];
-      while (current.row < target.row) {
-         path.push_back('v');
-         current.row++;
-         totalSteps++;
-      }
-      while (current.row > target.row) {
-         path.push_back('^');
-         current.row--;
-         totalSteps++;
-      }
-
-      while (current.col < target.col) {
-         path.push_back('>');
-         current.col++;
-         totalSteps++;
-      }
-      while (current.col > target.col) {
-         path.push_back('<');
-         current.col--;
-         totalSteps++;
-      }
-      path.push_back('A');
-   }
-   std::string result = "";
-   for (char c : path){
-      result += c;
-   }
-   return result;
+std::vector<std::vector<char>> dirKeypad = {
+   {' ', '^', 'A'},
+   {'<', 'v', '>'}
+};
+struct Seq {
+   
+};
+std::vector<std::string> cartesianProduct(const std::vector<std::vector<std::string>>& input) {
+    std::vector<std::string> result = {""};
+    for (const auto& group : input) {
+        std::vector<std::string> temp;
+        for (const auto& item : group) {
+            for (const auto& current : result) {
+                temp.push_back(current + item);
+            }
+        }
+        result = std::move(temp);
+    }
+    return result;
 }
-std::string getDirectionActions(std::string directions){
-   Position current = dirPad['A'];
-   int totalSteps = 0;
-   std::vector<char> path; // To store the movement directions
-
-   for (char digit : directions) {
-      Position target = dirPad[digit];
-      while (current.row < target.row) {
-         path.push_back('v');
-         current.row++;
-         totalSteps++;
+std::vector<std::string> solve1(std::string string, std::vector<std::vector<char>> keypad){
+   std::map<char, std::pair<int, int>> pos;
+   for (int r = 0; r < keypad.size(); ++r){
+      for (int c = 0; c < keypad[0].size(); ++c){
+         if (keypad[r][c] != ' ') pos[keypad[r][c]] = {r, c};
       }
-      while (current.row > target.row) {
-         path.push_back('^');
-         current.row--;
-         totalSteps++;
-      }
-
-      while (current.col < target.col) {
-         path.push_back('>');
-         current.col++;
-         totalSteps++;
-      }
-      while (current.col > target.col) {
-         path.push_back('<');
-         current.col--;
-         totalSteps++;
-      }
-      path.push_back('A');
    }
-   std::string result = "";
-   for (char c : path){
-      result += c;
+   std::map<std::pair<std::pair<int,int>, std::pair<int, int>>, std::vector<std::string>> seqs;
+   for (auto x : pos){
+      for (auto y : pos){
+         if (x.second == y.second){
+            seqs[{x.second, y.second}] = {"A"};
+            continue;
+         }
+         std::vector<std::string> possibilities;
+         std::deque<std::pair<std::pair<int,int>, std::string>> q = {{x.second, ""}};
+         double optimal = INFINITY;
+         bool run = true;
+         while (!q.empty() && run){
+            auto [r, c] = q.front().first;
+            auto moves = q.front().second;
+            q.pop_front();
+            for (auto [nr, nc, nm] : std::vector<std::tuple<int, int, char>>{{r-1,c,'^'},{r+1,c,'v'},{r,c+1,'>'},{r,c-1,'<'}}){
+               if (nr < 0 || nc < 0 || nr >= keypad.size() || nc >= keypad[0].size()) continue;
+               if (keypad[nr][nc] == ' ') continue;
+               if (keypad[nr][nc] == y.first){
+                  if (optimal < moves.length()+1){
+                     run = false;
+                     break;
+                  }
+                  optimal = moves.length()+1;
+                  possibilities.push_back(moves+nm+'A');
+               }
+               else {
+                  q.push_back({{nr, nc}, moves+nm});
+               }
+            }
+         }
+         seqs[{x.second, y.second}] = possibilities;
+      }
    }
-   return result;
+
+   std::vector<std::vector<std::string>> options;
+   std::string str = 'A'+string;
+   for (int i = 0; i < str.length()-1; ++i){
+      options.push_back(seqs[{pos[str[i]], pos[str[i+1]]}]);
+   }
+   return cartesianProduct(options);
 }
-
 int part1(std::vector<std::string> codes){
-   int result = 0;
-   for (std::string c : codes){
-      int numPart = std::stoi((c.substr(0, c.length()-1)));
-      std::string actions = (getDirectionActions(getDirectionActions(getNumericActions(c))));
-      int lenPart = actions.length();
-      std::cout << lenPart << '*' << numPart << std::endl;
-      result += lenPart*numPart;
+   int total = 0;
+   for (std::string code : codes){
+      auto robot1 = solve1(codes[0], numKeypad);
+      auto next = robot1;
+      for (int i = 0; i < 2; ++i){
+         std::vector<std::vector<std::string>> possibleNext;
+         for (auto seq : next){ possibleNext.push_back(solve1(seq, dirKeypad)); }
+         auto minlen = std::min_element(possibleNext.begin(), possibleNext.end(),
+                                        [](const std::vector<std::string>& a, const std::vector<std::string>& b) {
+                                        return a.size() < b.size();
+                                        })->size();
+         std::vector<std::vector<std::string>> nextTemp;
+         for (auto seq : possibleNext){
+            if (seq.size() == minlen) nextTemp.push_back(seq);
+         }
+         next = nextTemp[0];
+      }
+      total += next[0].length() * std::stoi(codes[0].substr(0, codes[0].length()-1));
    }
-   return result;
+   return total;
 }
 
 int main (int argc, char *argv[]) {
