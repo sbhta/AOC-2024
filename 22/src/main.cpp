@@ -1,5 +1,7 @@
 #include <fstream>
 #include <iostream>
+#include <map>
+#include <set>
 #include <string>
 #include <utility>
 #include <vector>
@@ -12,12 +14,23 @@ void evolveNumber(long long& sN){
    sN = prune(mix(sN,sN*2048)); // step 3
 }
 
+std::map<std::vector<int>, int> seqToTotal;
 long long part1(std::vector<std::string> inp){
    std::vector<long long> secretNumbers;
    for (std::string s : inp){ secretNumbers.push_back(std::stoll(s)); }
    for (long long& num : secretNumbers){
+      std::vector<int> buyer = {(int)(num%10)};
       for (int i = 0; i < 2000; ++i){
          evolveNumber(num);
+         buyer.push_back((int)(num%10));
+      }
+      std::set<std::vector<int>> seen;
+      for (int i = 0; i < buyer.size()-4; ++i){
+         auto [a, b, c, d, e] = std::tuple<int, int, int, int, int>{buyer[i+0],buyer[i+1],buyer[i+2],buyer[i+3],buyer[i+4]};
+         std::vector<int> seq = {b-a, c-b, d-c, e-d};
+         if (seen.find(seq) != seen.end()) continue;
+         seen.insert(seq);
+         seqToTotal[seq] += e;
       }
    }
    long long result = 0;
@@ -27,20 +40,11 @@ long long part1(std::vector<std::string> inp){
    return result;
 }
 long long part2(std::vector<std::string> inp){
-   std::vector<long long> secretNumbers;
-   for (std::string s : inp){ secretNumbers.push_back(std::stoll(s)); }
-
-   for (long long& num : secretNumbers){
-      std::vector<int> prices; // for a single monkey
-      prices.push_back(num%10);
-      for (int i = 0; i < 2000; ++i){ evolveNumber(num); prices.push_back(num%10); }
-      std::vector<std::pair<int, int>> changes;
-      for (int i = 0; i < prices.size()-1; ++i){
-         changes.push_back({prices[i+1], prices[i+1]-prices[i]});
-      }
+   int max = -1;
+   for (auto [seq, total] : seqToTotal){
+      if (total > max) max = total;
    }
-
-   return 0;
+   return max;
 }
 int main (int argc, char *argv[]) {
       if (argc < 2) {
