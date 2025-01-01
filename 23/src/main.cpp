@@ -1,107 +1,72 @@
 #include <algorithm>
 #include <fstream>
 #include <iostream>
+#include <map>
+#include <set>
 #include <string>
 #include <tuple>
-#include <unordered_map>
-#include <unordered_set>
 #include <vector>
-#include <set>
-#include <sstream>
-std::vector<std::set<std::string>> findTriangles(const std::unordered_map<std::string, std::unordered_set<std::string>>& graph) {
-   std::vector<std::set<std::string>> triangles;
-
-   for (const auto& [node, neighbors] : graph) {
-      for (const std::string& neighbor1 : neighbors) {
-         if (graph.find(neighbor1) != graph.end()) {
-            for (const std::string& neighbor2 : graph.at(neighbor1)) {
-               if (neighbor2 != node && neighbors.find(neighbor2) != neighbors.end()) {
-                  // Found a triangle
-                  std::set<std::string> triangle = {node, neighbor1, neighbor2};
-                  // Ensure the triangle is unique
-                  if (std::find(triangles.begin(), triangles.end(), triangle) == triangles.end()) {
-                     triangles.push_back(triangle);
-                  }
-               }
+std::map<std::string, std::set<std::string>> conns;
+int part1(std::vector<std::string> inp){
+   std::vector<std::pair<std::string, std::string>> edges;
+   for (std::string s : inp){ edges.push_back({s.substr(0, 2), s.substr(3)}); }
+   for (auto [x, y] : edges){
+      if (conns.find(x) == conns.end()) conns[x] = {};
+      if (conns.find(y) == conns.end()) conns[y] = {};
+      conns[x].insert(y);
+      conns[y].insert(x);
+   }
+   std::set<std::tuple<std::string, std::string, std::string>> sets;
+   for (auto x : conns){
+      for (auto y : conns[x.first]){
+         for (auto z : conns[y]){
+            if (x.first != z && conns[z].find(x.first) != conns[z].end()){
+               std::vector<std::string> arr(3);
+               arr = {x.first, y, z};
+               std::sort(arr.begin(), arr.end());
+               sets.insert(std::make_tuple(arr[0], arr[1], arr[2]));
             }
          }
       }
    }
-   return triangles;
-}
-bool isClique(const std::set<std::string>& nodes, const std::unordered_map<std::string, std::unordered_set<std::string>>& graph) {
-   for (const std::string& node : nodes) {
-      for (const std::string& other : nodes) {
-         if (node != other && graph.at(node).find(other) == graph.at(node).end()) {
-            return false;
-         }
-      }
-   }
-   return true;
-}
-std::set<std::string> findLargestClique(const std::unordered_map<std::string, std::unordered_set<std::string>>& graph) {
-   std::set<std::string> largestClique;
-   std::vector<std::string> nodes;
-   for (const auto& [node, _] : graph) {
-      nodes.push_back(node);
-   }
-
-   size_t n = nodes.size();
-   // Use bitmasking to find all subsets of nodes
-   for (size_t mask = 1; mask < (1 << n); ++mask) {
-      std::set<std::string> subset;
-      for (size_t i = 0; i < n; ++i) {
-         if (mask & (1 << i)) {
-            subset.insert(nodes[i]);
-         }
-      }
-      if (subset.size() > largestClique.size() && isClique(subset, graph)) {
-         largestClique = subset;
-      }
-   }
-   return largestClique;
-}
-int part1(std::vector<std::string> inp){
-   std::unordered_map<std::string, std::unordered_set<std::string>> pcs;
-   for (std::string s : inp){
-      std::string a = s.substr(0, 2), b = s.substr(3);
-      pcs[a].insert(b);
-      pcs[b].insert(a);
-   }
-   std::vector<std::set<std::string>> triangles = findTriangles(pcs);
    int count = 0;
-   for (auto s : triangles){
-      bool containsT = false;
-      for (auto ss : s){
-         if (ss[0] == 't') containsT = true;
+   for (auto s : sets){
+      if (std::get<0>(s)[0] == 't' || std::get<1>(s)[0] == 't' || std::get<2>(s)[0] == 't'){
+         count++;
+         continue;
       }
-      if (containsT) count++;
    }
    return count;
 }
-int part2(std::vector<std::string> inp){
-   std::unordered_map<std::string, std::unordered_set<std::string>> pcs;
-   for (std::string s : inp){
-      std::string a = s.substr(0, 2), b = s.substr(3);
-      pcs[a].insert(b);
-      pcs[b].insert(a);
+std::set<std::set<std::string>> sets2;
+void search(std::string& node, std::set<std::string> req){
+   std::vector<std::string> temp; for (std::string s : req) temp.push_back(s);
+   std::sort(temp.begin(), temp.end());
+   std::set<std::string> sorted(temp.begin(), temp.end());
+   if (sets2.find(sorted) != sets2.end()) return;
+   sets2.insert(sorted);
+   for (auto neighbor : conns[node]){
+      if (req.find(neighbor) != req.end()) continue;
+      if (!std::all_of(req.begin(), req.end(), [&](const auto& query) { return conns[query].find(neighbor) != conns[query].end(); })) continue;
+      auto req2 = req;
+      req2.insert(neighbor);
+      search(neighbor, req2);
    }
-   std::set<std::string> largestClique = findLargestClique(pcs);
-   std::vector<std::string> sortedClique(largestClique.begin(), largestClique.end());
-   std::sort(sortedClique.begin(), sortedClique.end());
-   std::ostringstream passwordStream;
-   for (size_t i = 0; i < sortedClique.size(); ++i) {
-      if (i > 0) {
-         passwordStream << ",";
-      }
-      passwordStream << sortedClique[i];
+}
+std::string part2(std::vector<std::string> inp){
+   for (auto x : conns){
+      std::string x1 = x.first;
+      search(x1, {x.first});
    }
-
-   std::string password = passwordStream.str();
-
-   // Output the result
-   std::cout << "Password to get into the LAN party: " << password << std::endl;
-   return 0;
+   std::set<std::string> max;
+   for (auto x : sets2){
+      if (x.size() > max.size()) max = x;
+   }
+   std::string result = "";
+   for (std::string s : max){
+      result += s +',';
+   }
+   return result.substr(0, result.length()-1);
 }
 
 int main (int argc, char *argv[]) {
